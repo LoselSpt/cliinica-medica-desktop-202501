@@ -11,14 +11,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class AtendimentoMedicoForm extends JFrame {
-    private Usuario usuarioLogado;
+    // private Usuario usuarioLogado;
     private JTable table;
     private DefaultTableModel tableModel;
     private ConsultaDao dao;
     private List<Consulta> consultas;
 
     public AtendimentoMedicoForm(Usuario usuario) {
-        this.usuarioLogado = usuario;
+        // this.usuarioLogado = usuario;
         this.dao = new ConsultaDao();
 
         setTitle("Atendimento Médico - " + usuario.getFuncionario().getNome());

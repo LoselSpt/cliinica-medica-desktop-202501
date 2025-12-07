@@ -126,4 +126,50 @@ public class ConsultaDao extends BaseDao {
         }
         return consultas;
     }
+
+    public void cancelar(Long id) throws SQLException {
+        String sql = "UPDATE consultas SET status = 'CANCELADA' WHERE id = ?";
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
+    public List<Consulta> buscarTodas() throws SQLException {
+        List<Consulta> consultas = new ArrayList<>();
+        String sql = "SELECT c.*, p.nome as nome_paciente, m.crm, med_p.nome as nome_medico " +
+                "FROM consultas c " +
+                "JOIN pessoas p ON c.id_paciente = p.id " +
+                "JOIN medico m ON c.id_medico = m.id " +
+                "JOIN pessoas med_p ON m.id_pessoa = med_p.id " +
+                "ORDER BY c.data_hora DESC";
+
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Consulta c = new Consulta();
+                c.setId(rs.getLong("id"));
+                c.setDataHora(rs.getTimestamp("data_hora").toLocalDateTime());
+                c.setStatus(rs.getString("status"));
+                c.setMotivo(rs.getString("motivo"));
+                c.setRetorno(rs.getBoolean("is_retorno"));
+
+                Medico m = new Medico();
+                m.setId(rs.getLong("id_medico"));
+                m.setCrm(rs.getString("crm"));
+                m.setNome(rs.getString("nome_medico"));
+                c.setMedico(m);
+
+                Pessoa p = new Pessoa();
+                p.setId(rs.getLong("id_paciente"));
+                p.setNome(rs.getString("nome_paciente"));
+                c.setPaciente(p);
+
+                consultas.add(c);
+            }
+        }
+        return consultas;
+    }
 }

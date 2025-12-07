@@ -1,6 +1,5 @@
 package br.edu.imepac.clinica;
 
-import br.edu.imepac.clinica.screens.MainMenu;
 import br.edu.imepac.clinica.screens.LoginForm;
 import javax.swing.SwingUtilities;
 

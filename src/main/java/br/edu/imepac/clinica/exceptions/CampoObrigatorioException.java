@@ -11,10 +11,8 @@ import java.util.List;
  * @author evertonhf
  */
 public class CampoObrigatorioException extends Exception {
-    private final List<String> campos;
-    
-    public CampoObrigatorioException(List<String> campos){
-        this.campos= campos;
+    public CampoObrigatorioException(List<String> campos) {
+        // this.campos= campos;
     }
-    
+
 }

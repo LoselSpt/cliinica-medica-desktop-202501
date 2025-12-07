@@ -16,6 +16,14 @@ import javax.swing.JLabel;
  */
 public class BaseScreen extends JFrame {
 
+    public BaseScreen() {
+        super();
+    }
+
+    public BaseScreen(String title) {
+        super(title);
+    }
+
     protected void setImageIcon(String fileName, JLabel component) {
         URL resource = getClass().getClassLoader().getResource("images/" + fileName);
 
@@ -32,4 +40,16 @@ public class BaseScreen extends JFrame {
         }
     }
 
+    protected void showError(String message) {
+        javax.swing.JOptionPane.showMessageDialog(this, message, "Erro", javax.swing.JOptionPane.ERROR_MESSAGE);
+    }
+
+    protected void showWarning(String message) {
+        javax.swing.JOptionPane.showMessageDialog(this, message, "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
+    }
+
+    protected void showSuccess(String message) {
+        javax.swing.JOptionPane.showMessageDialog(this, message, "Sucesso",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }
 }

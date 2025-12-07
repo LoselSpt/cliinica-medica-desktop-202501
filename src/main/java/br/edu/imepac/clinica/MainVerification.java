@@ -86,9 +86,10 @@ public class MainVerification extends BaseDao {
                     "INSERT INTO pessoas (nome, telefone, email) VALUES ('Paciente Zero', '456', 'zero@mail.com')",
                     Statement.RETURN_GENERATED_KEYS);
             gk = stmt.getGeneratedKeys();
-            long idPacientePessoa = 0;
-            if (gk.next())
-                idPacientePessoa = gk.getLong(1);
+            // long idPacientePessoa = 0;
+            if (gk.next()) {
+                // idPacientePessoa = gk.getLong(1);
+            }
 
             PreparedStatement pstmt = conn
                     .prepareStatement("INSERT INTO medico (crm, id_pessoa, id_especialidade) VALUES (?, ?, ?)");

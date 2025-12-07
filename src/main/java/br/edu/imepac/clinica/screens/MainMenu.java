@@ -4,7 +4,7 @@ import br.edu.imepac.clinica.entidades.EnumFuncionalidades;
 import br.edu.imepac.clinica.entidades.Usuario;
 import br.edu.imepac.clinica.screens.especialidades.EspecialidadeAddForm;
 import javax.swing.*;
-import java.awt.event.ActionEvent;
+
 import java.util.Set;
 
 public class MainMenu extends JFrame {
@@ -37,7 +37,7 @@ public class MainMenu extends JFrame {
 
         if (funcs.contains(EnumFuncionalidades.CADASTRAR_MEDICO)) {
             JMenuItem item = new JMenuItem("Médicos");
-            // item.addActionListener(e -> new MedicoListaForm().setVisible(true));
+            item.addActionListener(e -> new MedicoListaForm().setVisible(true));
             menuCadastros.add(item);
             hasCadastros = true;
         }
@@ -52,6 +52,13 @@ public class MainMenu extends JFrame {
         if (funcs.contains(EnumFuncionalidades.CADASTRAR_CONVENIO)) {
             JMenuItem item = new JMenuItem("Convênios");
             // item.addActionListener(e -> new ConvenioListaForm().setVisible(true));
+            menuCadastros.add(item);
+            hasCadastros = true;
+        }
+
+        if (funcs.contains(EnumFuncionalidades.CADASTRAR_USUARIO)) {
+            JMenuItem item = new JMenuItem("Usuários");
+            item.addActionListener(e -> new UsuarioAddForm().setVisible(true));
             menuCadastros.add(item);
             hasCadastros = true;
         }
@@ -77,8 +84,26 @@ public class MainMenu extends JFrame {
             hasAtendimento = true;
         }
 
+        // Menu Consultas (Secretaria)
+        if (funcs.contains(EnumFuncionalidades.DELETAR_CONSULTA)) {
+            JMenuItem item = new JMenuItem("Consultas");
+            item.addActionListener(e -> new ConsultaListaForm(usuarioLogado).setVisible(true));
+            menuAtendimento.add(item);
+            hasAtendimento = true;
+        }
+
         if (hasAtendimento)
             menuBar.add(menuAtendimento);
+
+        // Menu Opções (Sair)
+        JMenu menuOpcoes = new JMenu("Opções");
+        JMenuItem itemSair = new JMenuItem("Sair");
+        itemSair.addActionListener(e -> {
+            this.dispose();
+            new LoginForm().setVisible(true);
+        });
+        menuOpcoes.add(itemSair);
+        menuBar.add(menuOpcoes);
 
         setJMenuBar(menuBar);
     }

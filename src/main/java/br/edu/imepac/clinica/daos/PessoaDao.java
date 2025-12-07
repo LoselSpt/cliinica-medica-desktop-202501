@@ -31,11 +31,17 @@ public class PessoaDao extends BaseDao {
     public void salvar(Pessoa pessoa) throws SQLException {
         String sql = "INSERT INTO pessoas (nome, telefone, email) VALUES (?, ?, ?)";
         try (Connection conn = getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, pessoa.getNome());
             stmt.setString(2, pessoa.getTelefone());
             stmt.setString(3, pessoa.getEmail());
             stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    pessoa.setId(rs.getLong(1));
+                }
+            }
         }
     }
 

@@ -23,10 +23,9 @@ public class AgendamentoForm extends JFrame {
     private JTextField txtDataHora;
     private JCheckBox chkRetorno;
     private JTextField txtMotivo;
-    private Usuario usuarioLogado;
 
     public AgendamentoForm(Usuario usuario) {
-        this.usuarioLogado = usuario;
+        // this.usuarioLogado = usuario;
         setTitle("Agendamento de Consulta");
         setSize(400, 400);
         setLocationRelativeTo(null);

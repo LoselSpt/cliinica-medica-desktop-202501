@@ -67,6 +67,78 @@ public class UsuarioDao extends BaseDao {
         return null;
     }
 
+    public void save(Usuario usuario) throws SQLException {
+        String sql = "INSERT INTO usuarios (login, senha, status, id_perfil, id_funcionario) VALUES (?, ?, ?, ?, ?)";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, usuario.getLogin());
+            stmt.setString(2, usuario.getSenha());
+            stmt.setString(3, usuario.getStatus().name());
+            stmt.setLong(4, usuario.getPerfil().getId());
+            stmt.setLong(5, usuario.getFuncionario().getId());
+
+            stmt.executeUpdate();
+
+            rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                usuario.setId(rs.getLong(1));
+            }
+        } finally {
+            fecharRecursos(conn, stmt, rs);
+        }
+    }
+
+    public void update(Usuario usuario) throws SQLException {
+        String sql = "UPDATE usuarios SET login = ?, senha = ?, status = ?, id_perfil = ?, id_funcionario = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, usuario.getLogin());
+            stmt.setString(2, usuario.getSenha());
+            stmt.setString(3, usuario.getStatus().name());
+            stmt.setLong(4, usuario.getPerfil().getId());
+            stmt.setLong(5, usuario.getFuncionario().getId());
+            stmt.setLong(6, usuario.getId());
+
+            stmt.executeUpdate();
+        } finally {
+            fecharRecursos(conn, stmt, null);
+        }
+    }
+
+    public Usuario findByLogin(String login) throws SQLException {
+        String sql = "SELECT * FROM usuarios WHERE login = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, login);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                // Simplified fetch for checking existence
+                Usuario u = new Usuario();
+                u.setId(rs.getLong("id"));
+                u.setLogin(rs.getString("login"));
+                return u;
+            }
+        } finally {
+            fecharRecursos(conn, stmt, rs);
+        }
+        return null;
+    }
+
     private Set<EnumFuncionalidades> buscarFuncionalidades(Connection conn, Long idPerfil) throws SQLException {
         Set<EnumFuncionalidades> funcs = new HashSet<>();
         String sql = "SELECT funcionalidade FROM perfil_funcionalidades WHERE id_perfil = ?";

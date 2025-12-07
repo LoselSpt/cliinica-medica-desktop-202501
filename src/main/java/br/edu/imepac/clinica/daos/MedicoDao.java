@@ -91,4 +91,67 @@ public class MedicoDao extends BaseDao {
 
         return medicos;
     }
+
+    public void salvar(Medico medico) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmtPessoa = null;
+        PreparedStatement stmtMedico = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Insert Pessoa
+            String sqlPessoa = "INSERT INTO pessoas (nome, telefone, email) VALUES (?, ?, ?)";
+            stmtPessoa = conn.prepareStatement(sqlPessoa, PreparedStatement.RETURN_GENERATED_KEYS);
+            stmtPessoa.setString(1, medico.getNome());
+            stmtPessoa.setString(2, medico.getTelefone());
+            stmtPessoa.setString(3, medico.getEmail());
+            stmtPessoa.executeUpdate();
+
+            rs = stmtPessoa.getGeneratedKeys();
+            if (rs.next()) {
+                medico.setId(rs.getLong(1)); // Set Pessoa ID
+            } else {
+                throw new SQLException("Falha ao criar Pessoa, nenhum ID obtido.");
+            }
+
+            // 2. Insert Medico
+            String sqlMedico = "INSERT INTO medico (crm, id_pessoa, id_especialidade) VALUES (?, ?, ?)";
+            stmtMedico = conn.prepareStatement(sqlMedico);
+            stmtMedico.setString(1, medico.getCrm());
+            stmtMedico.setLong(2, medico.getId()); // Use Pessoa ID
+            stmtMedico.setLong(3, medico.getEspecialidade().getId());
+            stmtMedico.executeUpdate();
+
+            conn.commit();
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            fecharRecursos(conn, stmtPessoa, rs);
+            if (stmtMedico != null)
+                stmtMedico.close();
+        }
+    }
+
+    public void atualizar(Medico medico) throws SQLException {
+        // Not strictly required by the prompt "Adicionar novos medicos", but good
+        // practice.
+        // Skipping implementation for now to focus on "Adicionar" as requested.
+    }
 }
