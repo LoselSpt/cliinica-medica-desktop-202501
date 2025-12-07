@@ -134,7 +134,7 @@ public class MainVerification extends BaseDao {
 
         LocalDateTime data = LocalDateTime.now().plusDays(1).withNano(0);
 
-        Consulta c1 = new Consulta(null, medico, paciente, data, "Checkup");
+        Consulta c1 = new Consulta(null, medico, paciente, null, null, data, false, "AGENDADA", "Checkup");
 
         boolean agendou = dao.agendar(c1);
         System.out.println("Agendamento 1: " + agendou);

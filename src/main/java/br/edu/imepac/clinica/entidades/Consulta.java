@@ -6,17 +6,26 @@ public class Consulta {
     private Long id;
     private Medico medico;
     private Pessoa paciente;
+    private Convenio convenio;
+    private Secretaria secretaria; // Who scheduled
     private LocalDateTime dataHora;
+    private boolean isRetorno;
+    private String status; // AGENDADA, REALIZADA, CANCELADA
     private String motivo;
 
     public Consulta() {
     }
 
-    public Consulta(Long id, Medico medico, Pessoa paciente, LocalDateTime dataHora, String motivo) {
+    public Consulta(Long id, Medico medico, Pessoa paciente, Convenio convenio, Secretaria secretaria,
+            LocalDateTime dataHora, boolean isRetorno, String status, String motivo) {
         this.id = id;
         this.medico = medico;
         this.paciente = paciente;
+        this.convenio = convenio;
+        this.secretaria = secretaria;
         this.dataHora = dataHora;
+        this.isRetorno = isRetorno;
+        this.status = status;
         this.motivo = motivo;
     }
 
@@ -44,12 +53,44 @@ public class Consulta {
         this.paciente = paciente;
     }
 
+    public Convenio getConvenio() {
+        return convenio;
+    }
+
+    public void setConvenio(Convenio convenio) {
+        this.convenio = convenio;
+    }
+
+    public Secretaria getSecretaria() {
+        return secretaria;
+    }
+
+    public void setSecretaria(Secretaria secretaria) {
+        this.secretaria = secretaria;
+    }
+
     public LocalDateTime getDataHora() {
         return dataHora;
     }
 
     public void setDataHora(LocalDateTime dataHora) {
         this.dataHora = dataHora;
+    }
+
+    public boolean isRetorno() {
+        return isRetorno;
+    }
+
+    public void setRetorno(boolean isRetorno) {
+        this.isRetorno = isRetorno;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getMotivo() {
