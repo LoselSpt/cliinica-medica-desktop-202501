@@ -118,8 +118,6 @@ public class ConsultaDao extends BaseDao {
                     p.setNome(rs.getString("nome_paciente"));
                     c.setPaciente(p);
 
-                    // Load Convenio/Secretaria if needed, skipping for brevity in list
-
                     consultas.add(c);
                 }
             }
@@ -171,5 +169,17 @@ public class ConsultaDao extends BaseDao {
             }
         }
         return consultas;
+    }
+
+    public int contarConsultasHoje() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM consultas WHERE DATE(data_hora) = CURDATE() AND status != 'CANCELADA'";
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 }

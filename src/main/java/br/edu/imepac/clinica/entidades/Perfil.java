@@ -39,4 +39,9 @@ public class Perfil {
     public void setFuncionalidades(Set<EnumFuncionalidades> funcionalidades) {
         this.funcionalidades = funcionalidades;
     }
+
+    @Override
+    public String toString() {
+        return this.nome;
+    }
 }

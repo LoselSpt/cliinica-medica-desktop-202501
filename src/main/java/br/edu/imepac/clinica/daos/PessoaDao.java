@@ -56,4 +56,16 @@ public class PessoaDao extends BaseDao {
             stmt.executeUpdate();
         }
     }
+
+    public int contarTotal() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM pessoas";
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
 }

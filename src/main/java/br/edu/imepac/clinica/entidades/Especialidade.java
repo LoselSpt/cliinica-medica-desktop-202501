@@ -16,7 +16,7 @@ public class Especialidade {
 
     public Especialidade() {
     }
-    
+
     public Especialidade(long id, String nome, String descricao) {
         this.id = id;
         this.nome = nome;
@@ -27,7 +27,7 @@ public class Especialidade {
         this.nome = nome;
         this.descricao = descricao;
     }
-    
+
     public long getId() {
         return id;
     }
@@ -50,5 +50,10 @@ public class Especialidade {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    @Override
+    public String toString() {
+        return this.nome;
     }
 }

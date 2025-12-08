@@ -4,79 +4,142 @@ import br.edu.imepac.clinica.daos.ProntuarioDao;
 import br.edu.imepac.clinica.entidades.Consulta;
 import br.edu.imepac.clinica.entidades.Prontuario;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.sql.SQLException;
 
-public class ProntuarioForm extends JFrame {
+public class ProntuarioForm extends BaseScreen {
     private Consulta consulta;
     private JTextArea txtHistorico;
     private JTextArea txtReceituario;
     private JTextArea txtExames;
+    private JTextArea txtObservacoes;
     private ProntuarioDao dao;
 
     public ProntuarioForm(Consulta consulta) {
+        super("Prontuário Eletrônico");
         this.consulta = consulta;
         this.dao = new ProntuarioDao();
 
-        setTitle("Prontuário - Paciente: " + consulta.getPaciente().getNome());
-        setSize(600, 500);
+        setSize(800, 600);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout(10, 10));
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        initComponents();
+        carregarDados();
+    }
+
+    private void initComponents() {
+        setLayout(new BorderLayout());
 
         // Header
-        JPanel panelHeader = new JPanel(new GridLayout(2, 1));
-        panelHeader.add(new JLabel("Paciente: " + consulta.getPaciente().getNome()));
-        panelHeader.add(new JLabel("Médico: " + consulta.getMedico().getCrm())); // Assuming Medico has name in Pessoa
-                                                                                 // part, but here accessing CRM
-        add(panelHeader, BorderLayout.NORTH);
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(COLOR_PRIMARY);
+        header.setBorder(new EmptyBorder(15, 20, 15, 20));
 
-        // Body
+        JLabel title = new JLabel("Prontuário: " + consulta.getPaciente().getNome());
+        title.setFont(FONT_TITLE);
+        title.setForeground(Color.WHITE);
+        header.add(title, BorderLayout.WEST);
+
+        JLabel subtitle = new JLabel("Médico: " + consulta.getMedico().getCrm()); // Ideal would be name
+        subtitle.setFont(FONT_REGULAR);
+        subtitle.setForeground(Color.LIGHT_GRAY);
+        header.add(subtitle, BorderLayout.EAST);
+
+        add(header, BorderLayout.NORTH);
+
+        // Tabs
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setFont(FONT_BOLD);
+        tabs.setBackground(COLOR_SURFACE);
+        tabs.setForeground(COLOR_TEXT);
 
-        txtHistorico = new JTextArea();
+        txtHistorico = createTextArea();
         tabs.addTab("Histórico", new JScrollPane(txtHistorico));
 
-        txtReceituario = new JTextArea();
+        txtExames = createTextArea();
+        tabs.addTab("Exames", new JScrollPane(txtExames));
+
+        txtReceituario = createTextArea();
         tabs.addTab("Receituário", new JScrollPane(txtReceituario));
 
-        txtExames = new JTextArea();
-        tabs.addTab("Exames", new JScrollPane(txtExames));
+        txtObservacoes = createTextArea();
+        tabs.addTab("Observações", new JScrollPane(txtObservacoes));
 
         add(tabs, BorderLayout.CENTER);
 
         // Footer
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 20));
+        footer.setBackground(COLOR_BACKGROUND);
+
+        JButton btnCancel = new JButton("Fechar");
+        btnCancel.setBackground(COLOR_SURFACE);
+        btnCancel.setForeground(COLOR_TEXT);
+        btnCancel.addActionListener(e -> dispose());
+
         JButton btnSalvar = new JButton("Salvar Prontuário");
         btnSalvar.addActionListener(e -> salvar());
-        add(btnSalvar, BorderLayout.SOUTH);
 
-        carregarDados();
+        footer.add(btnCancel);
+        footer.add(btnSalvar);
+        add(footer, BorderLayout.SOUTH);
+    }
+
+    private JTextArea createTextArea() {
+        JTextArea txt = new JTextArea();
+        txt.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        txt.setLineWrap(true);
+        txt.setWrapStyleWord(true);
+        txt.setBackground(COLOR_SURFACE);
+        txt.setForeground(COLOR_TEXT);
+        txt.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        return txt;
     }
 
     private void carregarDados() {
         try {
             Prontuario p = dao.buscarPorConsulta(consulta.getId());
             if (p != null) {
-                txtHistorico.setText(p.getHistorico());
+                // Split historico to extract observacoes if present
+                String fullHistorico = p.getHistorico();
+                if (fullHistorico != null && fullHistorico.contains("[OBSERVAÇÕES]")) {
+                    String[] parts = fullHistorico.split("\\[OBSERVAÇÕES\\]");
+                    txtHistorico.setText(parts[0].trim());
+                    if (parts.length > 1) {
+                        txtObservacoes.setText(parts[1].trim());
+                    }
+                } else {
+                    txtHistorico.setText(fullHistorico);
+                }
+
                 txtReceituario.setText(p.getReceituario());
                 txtExames.setText(p.getExames());
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar prontuário: " + e.getMessage());
+            showError("Erro ao carregar prontuário: " + e.getMessage());
         }
     }
 
     private void salvar() {
         try {
+            // Combine Historico and Observacoes
+            String historicoFinal = txtHistorico.getText();
+            String obs = txtObservacoes.getText().trim();
+            if (!obs.isEmpty()) {
+                historicoFinal += "\n\n[OBSERVAÇÕES]\n" + obs;
+            }
+
             Prontuario p = new Prontuario(
                     consulta.getId(),
-                    txtHistorico.getText(),
+                    historicoFinal,
                     txtReceituario.getText(),
                     txtExames.getText());
             dao.salvar(p);
-            JOptionPane.showMessageDialog(this, "Prontuário salvo com sucesso!");
+            showSuccess("Prontuário salvo com sucesso!");
             this.dispose();
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + e.getMessage());
+            showError("Erro ao salvar: " + e.getMessage());
         }
     }
 }

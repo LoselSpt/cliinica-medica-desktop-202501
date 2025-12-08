@@ -3,40 +3,74 @@ package br.edu.imepac.clinica.screens;
 import br.edu.imepac.clinica.daos.PessoaDao;
 import br.edu.imepac.clinica.entidades.Pessoa;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 
-public class PacienteListaForm extends JFrame {
+public class PacienteListaForm extends BaseScreen {
     private JTable table;
     private DefaultTableModel tableModel;
     private PessoaDao dao;
 
     public PacienteListaForm() {
+        super("Gestão de Pacientes");
         dao = new PessoaDao();
-        setTitle("Gestão de Pacientes");
-        setSize(600, 400);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Toolbar
-        JToolBar toolBar = new JToolBar();
-        JButton btnNovo = new JButton("Novo");
-        btnNovo.addActionListener(e -> abrirCadastro(null));
-        JButton btnAtualizar = new JButton("Atualizar Lista");
+        initComponents();
+        carregarDados();
+    }
+
+    private void initComponents() {
+        // Header / Toolbar
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(COLOR_PRIMARY);
+        topPanel.setBorder(new EmptyBorder(15, 20, 15, 20));
+
+        JLabel title = new JLabel("Pacientes");
+        title.setFont(FONT_TITLE);
+        title.setForeground(Color.WHITE);
+        topPanel.add(title, BorderLayout.WEST);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        actions.setOpaque(false);
+
+        JButton btnNovo = new JButton("Novo Paciente");
+        btnNovo.addActionListener(e -> new PacienteAddForm(this::carregarDados).setVisible(true));
+
+        JButton btnAtualizar = new JButton("Atualizar");
+        btnAtualizar.setBackground(COLOR_SURFACE);
+        btnAtualizar.setForeground(COLOR_TEXT);
         btnAtualizar.addActionListener(e -> carregarDados());
 
-        toolBar.add(btnNovo);
-        toolBar.add(btnAtualizar);
-        add(toolBar, BorderLayout.NORTH);
+        actions.add(btnAtualizar);
+        actions.add(btnNovo);
+        topPanel.add(actions, BorderLayout.EAST);
+
+        add(topPanel, BorderLayout.NORTH);
 
         // Table
-        tableModel = new DefaultTableModel(new Object[] { "ID", "Nome", "Telefone", "Email" }, 0);
-        table = new JTable(tableModel);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        tableModel = new DefaultTableModel(new Object[] { "ID", "Nome", "Telefone", "Email" }, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
 
-        carregarDados();
+        table = new JTable(tableModel);
+        table.setRowHeight(30);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(COLOR_BACKGROUND);
+
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     private void carregarDados() {
@@ -47,43 +81,7 @@ public class PacienteListaForm extends JFrame {
                 tableModel.addRow(new Object[] { p.getId(), p.getNome(), p.getTelefone(), p.getEmail() });
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar dados: " + e.getMessage());
+            showError("Erro ao carregar dados: " + e.getMessage());
         }
-    }
-
-    private void abrirCadastro(Pessoa pessoa) {
-        // Simple dialog for adding
-        JDialog dialog = new JDialog(this, "Novo Paciente", true);
-        dialog.setSize(300, 200);
-        dialog.setLayout(new GridLayout(4, 2));
-        dialog.setLocationRelativeTo(this);
-
-        JTextField txtNome = new JTextField();
-        JTextField txtTelefone = new JTextField();
-        JTextField txtEmail = new JTextField();
-
-        dialog.add(new JLabel("Nome:"));
-        dialog.add(txtNome);
-        dialog.add(new JLabel("Telefone:"));
-        dialog.add(txtTelefone);
-        dialog.add(new JLabel("Email:"));
-        dialog.add(txtEmail);
-
-        JButton btnSalvar = new JButton("Salvar");
-        btnSalvar.addActionListener(e -> {
-            Pessoa p = new Pessoa(null, txtNome.getText(), txtTelefone.getText(), txtEmail.getText());
-            try {
-                dao.salvar(p);
-                JOptionPane.showMessageDialog(dialog, "Salvo com sucesso!");
-                dialog.dispose();
-                carregarDados();
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(dialog, "Erro ao salvar: " + ex.getMessage());
-            }
-        });
-        dialog.add(new JLabel(""));
-        dialog.add(btnSalvar);
-
-        dialog.setVisible(true);
     }
 }

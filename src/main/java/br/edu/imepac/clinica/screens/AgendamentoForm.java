@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class AgendamentoForm extends JFrame {
+public class AgendamentoForm extends BaseScreen {
     private JComboBox<Medico> comboMedico;
     private JComboBox<Pessoa> comboPaciente;
     private JComboBox<Convenio> comboConvenio;
@@ -25,42 +25,109 @@ public class AgendamentoForm extends JFrame {
     private JTextField txtMotivo;
 
     public AgendamentoForm(Usuario usuario) {
-        // this.usuarioLogado = usuario;
-        setTitle("Agendamento de Consulta");
-        setSize(400, 400);
+        super("Agendamento de Consulta");
+        setSize(500, 600);
         setLocationRelativeTo(null);
-        setLayout(new GridLayout(7, 2, 10, 10));
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        add(new JLabel("Médico:"));
-        comboMedico = new JComboBox<>();
-        add(comboMedico);
-
-        add(new JLabel("Paciente:"));
-        comboPaciente = new JComboBox<>();
-        add(comboPaciente);
-
-        add(new JLabel("Convênio:"));
-        comboConvenio = new JComboBox<>();
-        add(comboConvenio);
-
-        add(new JLabel("Data/Hora (dd/MM/yyyy HH:mm):"));
-        txtDataHora = new JTextField();
-        add(txtDataHora);
-
-        add(new JLabel("É Retorno?"));
-        chkRetorno = new JCheckBox();
-        add(chkRetorno);
-
-        add(new JLabel("Motivo:"));
-        txtMotivo = new JTextField();
-        add(txtMotivo);
-
-        JButton btnSalvar = new JButton("Agendar");
-        btnSalvar.addActionListener(e -> agendar());
-        add(new JLabel(""));
-        add(btnSalvar);
-
+        initComponents();
         carregarCombos();
+    }
+
+    private void initComponents() {
+        setLayout(new BorderLayout());
+
+        // Header
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
+        header.setBackground(COLOR_PRIMARY);
+        JLabel title = new JLabel("Nova Consulta");
+        title.setFont(FONT_TITLE);
+        title.setForeground(Color.WHITE);
+        header.add(title);
+        add(header, BorderLayout.NORTH);
+
+        // Form
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(COLOR_SURFACE);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        // Medico
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        formPanel.add(createLabel("Médico:"), gbc);
+
+        gbc.gridy = 1;
+        comboMedico = new JComboBox<>();
+        formPanel.add(comboMedico, gbc);
+
+        // Paciente
+        gbc.gridy = 2;
+        formPanel.add(createLabel("Paciente:"), gbc);
+
+        gbc.gridy = 3;
+        comboPaciente = new JComboBox<>();
+        formPanel.add(comboPaciente, gbc);
+
+        // Convenio
+        gbc.gridy = 4;
+        formPanel.add(createLabel("Convênio:"), gbc);
+
+        gbc.gridy = 5;
+        comboConvenio = new JComboBox<>();
+        formPanel.add(comboConvenio, gbc);
+
+        // Data
+        gbc.gridy = 6;
+        formPanel.add(createLabel("Data/Hora (dd/MM/yyyy HH:mm):"), gbc);
+
+        gbc.gridy = 7;
+        txtDataHora = new JTextField();
+        formPanel.add(txtDataHora, gbc);
+
+        // Motivo
+        gbc.gridy = 8;
+        formPanel.add(createLabel("Motivo:"), gbc);
+
+        gbc.gridy = 9;
+        txtMotivo = new JTextField();
+        formPanel.add(txtMotivo, gbc);
+
+        // Retorno
+        gbc.gridy = 10;
+        chkRetorno = new JCheckBox("É Retorno?");
+        chkRetorno.setBackground(COLOR_SURFACE);
+        chkRetorno.setForeground(COLOR_TEXT);
+        formPanel.add(chkRetorno, gbc);
+
+        add(formPanel, BorderLayout.CENTER);
+
+        // Footer
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 20));
+        footer.setBackground(COLOR_BACKGROUND);
+
+        JButton btnCancel = new JButton("Cancelar");
+        btnCancel.setBackground(COLOR_SURFACE);
+        btnCancel.setForeground(COLOR_TEXT);
+        btnCancel.addActionListener(e -> dispose());
+
+        JButton btnSave = new JButton("Agendar");
+        btnSave.addActionListener(e -> agendar());
+
+        footer.add(btnCancel);
+        footer.add(btnSave);
+        add(footer, BorderLayout.SOUTH);
+    }
+
+    private JLabel createLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setFont(FONT_BOLD);
+        lbl.setForeground(COLOR_TEXT);
+        return lbl;
     }
 
     private void carregarCombos() {
@@ -71,7 +138,7 @@ public class AgendamentoForm extends JFrame {
                 comboMedico.addItem(m);
 
             PessoaDao pessoaDao = new PessoaDao();
-            List<Pessoa> pacientes = pessoaDao.buscarTodos(); // Should filter by patient ideally
+            List<Pessoa> pacientes = pessoaDao.buscarTodos();
             for (Pessoa p : pacientes)
                 comboPaciente.addItem(p);
 
@@ -81,7 +148,7 @@ public class AgendamentoForm extends JFrame {
                 comboConvenio.addItem(c);
 
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar dados: " + e.getMessage());
+            showError("Erro ao carregar dados: " + e.getMessage());
         }
     }
 
@@ -99,23 +166,15 @@ public class AgendamentoForm extends JFrame {
             consulta.setMotivo(txtMotivo.getText());
             consulta.setStatus("AGENDADA");
 
-            // Set Secretaria (who scheduled) if the user is a secretary
-            // For now, we can cast user.getFuncionario() to Secretaria if needed, or just
-            // pass the ID
-            // But Consulta entity expects Secretaria object.
-            // Let's assume for now we don't set it strictly or we create a dummy one with
-            // the ID.
-            // consulta.setSecretaria(...);
-
             ConsultaDao dao = new ConsultaDao();
             if (dao.agendar(consulta)) {
-                JOptionPane.showMessageDialog(this, "Agendamento realizado com sucesso!");
+                showSuccess("Agendamento realizado com sucesso!");
                 this.dispose();
             } else {
-                JOptionPane.showMessageDialog(this, "Conflito de horário! Escolha outro horário.");
+                showWarning("Conflito de horário! Escolha outro horário.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao agendar: " + e.getMessage());
+            showError("Erro ao agendar: " + e.getMessage());
         }
     }
 }

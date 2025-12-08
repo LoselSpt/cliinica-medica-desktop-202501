@@ -67,4 +67,9 @@ public class Usuario {
     public void setFuncionario(Pessoa funcionario) {
         this.funcionario = funcionario;
     }
+
+    @Override
+    public String toString() {
+        return this.login;
+    }
 }

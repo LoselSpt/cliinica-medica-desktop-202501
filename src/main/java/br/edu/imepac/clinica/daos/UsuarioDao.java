@@ -9,7 +9,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class UsuarioDao extends BaseDao {
@@ -137,6 +139,37 @@ public class UsuarioDao extends BaseDao {
             fecharRecursos(conn, stmt, rs);
         }
         return null;
+    }
+
+    public List<Usuario> buscarTodos() throws SQLException {
+        List<Usuario> usuarios = new ArrayList<>();
+        String sql = "SELECT u.id, u.login, u.status, p.nome as nome_perfil, pes.nome as nome_pessoa " +
+                "FROM usuarios u " +
+                "JOIN perfis p ON u.id_perfil = p.id " +
+                "JOIN pessoas pes ON u.id_funcionario = pes.id";
+
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Usuario u = new Usuario();
+                u.setId(rs.getLong("id"));
+                u.setLogin(rs.getString("login"));
+                u.setStatus(EnumStatusUsuario.valueOf(rs.getString("status")));
+
+                Perfil perfil = new Perfil();
+                perfil.setNome(rs.getString("nome_perfil"));
+                u.setPerfil(perfil);
+
+                Pessoa pessoa = new Pessoa();
+                pessoa.setNome(rs.getString("nome_pessoa"));
+                u.setFuncionario(pessoa);
+
+                usuarios.add(u);
+            }
+        }
+        return usuarios;
     }
 
     private Set<EnumFuncionalidades> buscarFuncionalidades(Connection conn, Long idPerfil) throws SQLException {
