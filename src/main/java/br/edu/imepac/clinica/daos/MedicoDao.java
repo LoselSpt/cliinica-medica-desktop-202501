@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,10 +72,6 @@ public class MedicoDao extends BaseDao {
 
             rs = stmtPessoa.getGeneratedKeys();
             if (rs.next()) {
-                // We set the ID temporarily to the Pessoa ID for the next step
-                // But note: Medico.id usually refers to the Medico table ID in this DAO's read
-                // methods
-                // This ambiguity exists but for insertion flow this works to get the FK.
                 medico.setId(rs.getLong(1));
             } else {
                 throw new SQLException("Falha ao criar Pessoa, nenhum ID obtido.");
@@ -85,7 +82,13 @@ public class MedicoDao extends BaseDao {
             stmtMedico = conn.prepareStatement(sqlMedico);
             stmtMedico.setString(1, medico.getCrm());
             stmtMedico.setLong(2, medico.getId()); // Use Pessoa ID
-            stmtMedico.setLong(3, medico.getEspecialidade().getId());
+
+            if (medico.getEspecialidade() != null) {
+                stmtMedico.setLong(3, medico.getEspecialidade().getId());
+            } else {
+                stmtMedico.setNull(3, Types.BIGINT);
+            }
+
             stmtMedico.executeUpdate();
 
             conn.commit();
@@ -112,6 +115,23 @@ public class MedicoDao extends BaseDao {
         }
     }
 
+    public void salvarParaPessoaExistente(Medico medico) throws SQLException {
+        String sql = "INSERT INTO medico (crm, id_pessoa, id_especialidade) VALUES (?, ?, ?)";
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, medico.getCrm());
+            stmt.setLong(2, medico.getId()); // ID inherited from Pessoa
+
+            if (medico.getEspecialidade() != null) {
+                stmt.setLong(3, medico.getEspecialidade().getId());
+            } else {
+                stmt.setNull(3, Types.BIGINT);
+            }
+
+            stmt.executeUpdate();
+        }
+    }
+
     public void atualizar(Medico medico) throws SQLException {
         // Not implemented
     }
@@ -121,7 +141,7 @@ public class MedicoDao extends BaseDao {
                 "e.id as id_especialidade, e.nome as nome_especialidade, e.descricao " +
                 "FROM medico m " +
                 "JOIN pessoas p ON m.id_pessoa = p.id " +
-                "JOIN especialidade e ON m.id_especialidade = e.id " +
+                "LEFT JOIN especialidade e ON m.id_especialidade = e.id " + // Changed to LEFT JOIN in case null
                 "WHERE m.id_pessoa = ?";
 
         Connection conn = null;
@@ -135,10 +155,13 @@ public class MedicoDao extends BaseDao {
             rs = stmt.executeQuery();
 
             if (rs.next()) {
-                Especialidade especialidade = new Especialidade();
-                especialidade.setId(rs.getLong("id_especialidade"));
-                especialidade.setNome(rs.getString("nome_especialidade"));
-                especialidade.setDescricao(rs.getString("descricao"));
+                Especialidade especialidade = null;
+                if (rs.getLong("id_especialidade") != 0) {
+                    especialidade = new Especialidade();
+                    especialidade.setId(rs.getLong("id_especialidade"));
+                    especialidade.setNome(rs.getString("nome_especialidade"));
+                    especialidade.setDescricao(rs.getString("descricao"));
+                }
 
                 Medico medico = new Medico();
                 medico.setId(rs.getLong("id"));

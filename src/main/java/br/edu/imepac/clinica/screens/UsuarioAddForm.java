@@ -1,9 +1,11 @@
 package br.edu.imepac.clinica.screens;
 
+import br.edu.imepac.clinica.daos.MedicoDao;
 import br.edu.imepac.clinica.daos.PerfilDao;
 import br.edu.imepac.clinica.daos.PessoaDao;
 import br.edu.imepac.clinica.daos.UsuarioDao;
 import br.edu.imepac.clinica.entidades.EnumStatusUsuario;
+import br.edu.imepac.clinica.entidades.Medico;
 import br.edu.imepac.clinica.entidades.Perfil;
 import br.edu.imepac.clinica.entidades.Pessoa;
 import br.edu.imepac.clinica.entidades.Usuario;
@@ -12,6 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
+import java.text.Normalizer;
 import java.util.List;
 
 public class UsuarioAddForm extends BaseScreen {
@@ -94,6 +97,19 @@ public class UsuarioAddForm extends BaseScreen {
             UsuarioDao usuarioDao = new UsuarioDao();
             usuarioDao.save(usuario);
 
+            // 3. If Profile is MEDICO, create Medico record
+            if (normalizeString(perfil.getNome()).equals("MEDICO")) {
+                MedicoDao medicoDao = new MedicoDao();
+                // Check if already exists (unlikely since we just created Person)
+                if (medicoDao.buscarPorIdPessoa(pessoa.getId()) == null) {
+                    Medico medico = new Medico();
+                    medico.setId(pessoa.getId());
+                    medico.setCrm("Pendente"); // Placeholder
+                    medico.setEspecialidade(null);
+                    medicoDao.salvarParaPessoaExistente(medico);
+                }
+            }
+
             JOptionPane.showMessageDialog(this, "Usuário cadastrado com sucesso!");
             this.dispose();
 
@@ -101,5 +117,13 @@ public class UsuarioAddForm extends BaseScreen {
             showError("Erro ao salvar usuário: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    private String normalizeString(String str) {
+        if (str == null)
+            return "";
+        String nfdNormalizedString = Normalizer.normalize(str, Normalizer.Form.NFD);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(nfdNormalizedString).replaceAll("").toUpperCase();
     }
 }

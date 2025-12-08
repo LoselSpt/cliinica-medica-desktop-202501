@@ -28,6 +28,28 @@ public class PessoaDao extends BaseDao {
         return pessoas;
     }
 
+    public List<Pessoa> buscarPacientes() throws SQLException {
+        List<Pessoa> pessoas = new ArrayList<>();
+        // Filter out Medicos and Users (Funcionarios)
+        String sql = "SELECT * FROM pessoas p " +
+                "WHERE p.id NOT IN (SELECT id_pessoa FROM medico) " +
+                "AND p.id NOT IN (SELECT id_funcionario FROM usuarios)";
+
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Pessoa p = new Pessoa();
+                p.setId(rs.getLong("id"));
+                p.setNome(rs.getString("nome"));
+                p.setTelefone(rs.getString("telefone"));
+                p.setEmail(rs.getString("email"));
+                pessoas.add(p);
+            }
+        }
+        return pessoas;
+    }
+
     public void salvar(Pessoa pessoa) throws SQLException {
         String sql = "INSERT INTO pessoas (nome, telefone, email) VALUES (?, ?, ?)";
         try (Connection conn = getConnection();
@@ -57,6 +79,15 @@ public class PessoaDao extends BaseDao {
         }
     }
 
+    public void excluir(Long id) throws SQLException {
+        String sql = "DELETE FROM pessoas WHERE id = ?";
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
     public int contarTotal() throws SQLException {
         String sql = "SELECT COUNT(*) FROM pessoas";
         try (Connection conn = getConnection();
@@ -67,5 +98,39 @@ public class PessoaDao extends BaseDao {
             }
         }
         return 0;
+    }
+
+    public int contarPacientes() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM pessoas p " +
+                "WHERE p.id NOT IN (SELECT id_pessoa FROM medico) " +
+                "AND p.id NOT IN (SELECT id_funcionario FROM usuarios)";
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    // Helper for fixing login
+    public Pessoa buscarPorNome(String nome) throws SQLException {
+        String sql = "SELECT * FROM pessoas WHERE nome = ?";
+        try (Connection conn = getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, nome);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Pessoa p = new Pessoa();
+                    p.setId(rs.getLong("id"));
+                    p.setNome(rs.getString("nome"));
+                    p.setTelefone(rs.getString("telefone"));
+                    p.setEmail(rs.getString("email"));
+                    return p;
+                }
+            }
+        }
+        return null;
     }
 }

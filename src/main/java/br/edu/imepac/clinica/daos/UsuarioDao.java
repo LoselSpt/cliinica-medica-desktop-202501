@@ -143,7 +143,10 @@ public class UsuarioDao extends BaseDao {
 
     public List<Usuario> buscarTodos() throws SQLException {
         List<Usuario> usuarios = new ArrayList<>();
-        String sql = "SELECT u.id, u.login, u.status, p.nome as nome_perfil, pes.nome as nome_pessoa " +
+        // Updated SQL to fetch IDs
+        String sql = "SELECT u.id, u.login, u.status, u.senha, " +
+                "p.id as id_perfil, p.nome as nome_perfil, " +
+                "pes.id as id_pessoa, pes.nome as nome_pessoa " +
                 "FROM usuarios u " +
                 "JOIN perfis p ON u.id_perfil = p.id " +
                 "JOIN pessoas pes ON u.id_funcionario = pes.id";
@@ -156,13 +159,16 @@ public class UsuarioDao extends BaseDao {
                 Usuario u = new Usuario();
                 u.setId(rs.getLong("id"));
                 u.setLogin(rs.getString("login"));
+                u.setSenha(rs.getString("senha")); // Fetch password too if needed for update logic
                 u.setStatus(EnumStatusUsuario.valueOf(rs.getString("status")));
 
                 Perfil perfil = new Perfil();
+                perfil.setId(rs.getLong("id_perfil")); // Set ID
                 perfil.setNome(rs.getString("nome_perfil"));
                 u.setPerfil(perfil);
 
                 Pessoa pessoa = new Pessoa();
+                pessoa.setId(rs.getLong("id_pessoa")); // Set ID
                 pessoa.setNome(rs.getString("nome_pessoa"));
                 u.setFuncionario(pessoa);
 

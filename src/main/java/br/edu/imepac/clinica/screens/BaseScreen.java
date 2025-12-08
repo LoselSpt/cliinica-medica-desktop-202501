@@ -62,12 +62,13 @@ public class BaseScreen extends JFrame {
             UIManager.put("Label.foreground", new ColorUIResource(COLOR_TEXT));
             UIManager.put("Label.font", new FontUIResource(FONT_REGULAR));
 
-            UIManager.put("Button.background", new ColorUIResource(COLOR_PRIMARY));
+            // Set default button color to PRIMARY_DARK as requested
+            UIManager.put("Button.background", new ColorUIResource(COLOR_PRIMARY_DARK));
             UIManager.put("Button.foreground", new ColorUIResource(Color.WHITE));
             UIManager.put("Button.font", new FontUIResource(FONT_BOLD));
             UIManager.put("Button.focus", new ColorUIResource(new Color(0, 0, 0, 0)));
             UIManager.put("Button.border", BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(COLOR_PRIMARY_DARK, 1),
+                    BorderFactory.createLineBorder(COLOR_PRIMARY, 1), // Border slightly lighter
                     BorderFactory.createEmptyBorder(8, 16, 8, 16)));
 
             UIManager.put("TextField.background", new ColorUIResource(COLOR_SURFACE));
@@ -89,7 +90,7 @@ public class BaseScreen extends JFrame {
             UIManager.put("Table.gridColor", new ColorUIResource(COLOR_BORDER));
             UIManager.put("Table.selectionBackground", new ColorUIResource(COLOR_ACCENT));
             UIManager.put("Table.selectionForeground", new ColorUIResource(Color.WHITE));
-            UIManager.put("TableHeader.background", new ColorUIResource(COLOR_PRIMARY));
+            UIManager.put("TableHeader.background", new ColorUIResource(COLOR_PRIMARY_DARK)); // Headers also dark
             UIManager.put("TableHeader.foreground", new ColorUIResource(Color.WHITE));
             UIManager.put("TableHeader.font", new FontUIResource(FONT_BOLD));
 

@@ -16,10 +16,12 @@ public class LoginForm extends BaseScreen {
         super("Login - Clínica Médica");
         setSize(400, 500); // Slightly larger for better spacing
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
         setLayout(new GridBagLayout()); // Center everything
 
         initComponents();
+
+        // Center on screen AFTER setting size and components
+        setLocationRelativeTo(null);
     }
 
     private void initComponents() {

@@ -1,5 +1,6 @@
 package br.edu.imepac.clinica.screens;
 
+import br.edu.imepac.clinica.daos.ConsultaDao;
 import br.edu.imepac.clinica.daos.ProntuarioDao;
 import br.edu.imepac.clinica.entidades.Consulta;
 import br.edu.imepac.clinica.entidades.Prontuario;
@@ -15,11 +16,13 @@ public class ProntuarioForm extends BaseScreen {
     private JTextArea txtExames;
     private JTextArea txtObservacoes;
     private ProntuarioDao dao;
+    private ConsultaDao consultaDao;
 
     public ProntuarioForm(Consulta consulta) {
         super("Prontuário Eletrônico");
         this.consulta = consulta;
         this.dao = new ProntuarioDao();
+        this.consultaDao = new ConsultaDao();
 
         setSize(800, 600);
         setLocationRelativeTo(null);
@@ -42,7 +45,7 @@ public class ProntuarioForm extends BaseScreen {
         title.setForeground(Color.WHITE);
         header.add(title, BorderLayout.WEST);
 
-        JLabel subtitle = new JLabel("Médico: " + consulta.getMedico().getCrm()); // Ideal would be name
+        JLabel subtitle = new JLabel("Médico: " + consulta.getMedico().getCrm());
         subtitle.setFont(FONT_REGULAR);
         subtitle.setForeground(Color.LIGHT_GRAY);
         header.add(subtitle, BorderLayout.EAST);
@@ -78,7 +81,9 @@ public class ProntuarioForm extends BaseScreen {
         btnCancel.setForeground(COLOR_TEXT);
         btnCancel.addActionListener(e -> dispose());
 
-        JButton btnSalvar = new JButton("Salvar Prontuário");
+        JButton btnSalvar = new JButton("Finalizar Consulta");
+        btnSalvar.setBackground(COLOR_PRIMARY); // Dark Blue
+        btnSalvar.setForeground(Color.WHITE);
         btnSalvar.addActionListener(e -> salvar());
 
         footer.add(btnCancel);
@@ -136,7 +141,11 @@ public class ProntuarioForm extends BaseScreen {
                     txtReceituario.getText(),
                     txtExames.getText());
             dao.salvar(p);
-            showSuccess("Prontuário salvo com sucesso!");
+
+            // Update Status to ATENDIDO
+            consultaDao.atualizarStatus(consulta.getId(), "ATENDIDO");
+
+            showSuccess("Consulta finalizada e prontuário salvo com sucesso!");
             this.dispose();
         } catch (SQLException e) {
             showError("Erro ao salvar: " + e.getMessage());

@@ -12,8 +12,10 @@ import br.edu.imepac.clinica.screens.especialidades.EspecialidadeAddForm;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.sql.SQLException;
+import java.text.Normalizer;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
@@ -24,8 +26,8 @@ public class MainMenu extends BaseScreen {
 
     public MainMenu(Usuario usuario) {
         this.usuarioLogado = usuario;
-        setTitle("Clínica Médica - " + usuario.getFuncionario().getNome());
-        setExtendedState(JFrame.MAXIMIZED_BOTH); // Start maximized for professional feel
+        setTitle("HealthWay - " + usuario.getFuncionario().getNome());
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -44,7 +46,7 @@ public class MainMenu extends BaseScreen {
         sidebar.setBorder(new EmptyBorder(20, 10, 20, 10));
 
         // App Title in Sidebar
-        JLabel appTitle = new JLabel("CLÍNICA MÉDICA");
+        JLabel appTitle = new JLabel("HEALTHWAY");
         appTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         appTitle.setForeground(Color.WHITE);
         appTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -69,7 +71,7 @@ public class MainMenu extends BaseScreen {
 
         // Navigation Buttons
         Set<EnumFuncionalidades> funcs = usuarioLogado.getPerfil().getFuncionalidades();
-        String role = usuarioLogado.getPerfil().getNome().toUpperCase();
+        String role = normalizeString(usuarioLogado.getPerfil().getNome());
 
         addSidebarButton(sidebar, "Dashboard", e -> showDashboard());
 
@@ -182,7 +184,8 @@ public class MainMenu extends BaseScreen {
 
         try {
             PessoaDao pessoaDao = new PessoaDao();
-            totalPacientes = String.valueOf(pessoaDao.contarTotal());
+            // Use contarPacientes to exclude doctors and users
+            totalPacientes = String.valueOf(pessoaDao.contarPacientes());
 
             ConsultaDao consultaDao = new ConsultaDao();
             consultasHoje = String.valueOf(consultaDao.contarConsultasHoje());
@@ -206,7 +209,7 @@ public class MainMenu extends BaseScreen {
                 BorderFactory.createLineBorder(COLOR_BORDER),
                 new EmptyBorder(20, 20, 20, 20)));
 
-        String role = usuarioLogado.getPerfil().getNome().toUpperCase();
+        String role = normalizeString(usuarioLogado.getPerfil().getNome());
 
         if (role.equals("GERENTE")) {
             createGerenteView(bottomPanel);
@@ -232,11 +235,25 @@ public class MainMenu extends BaseScreen {
         lbl.setForeground(COLOR_TEXT);
         panel.add(lbl, BorderLayout.NORTH);
 
-        DefaultTableModel model = new DefaultTableModel(new Object[] { "ID", "Login", "Perfil", "Nome", "Status" }, 0);
+        // Added "Ação" column
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[] { "ID", "Login", "Perfil", "Nome", "Status", "Ação" }, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 5; // Only button is editable
+            }
+        };
+
         JTable table = new JTable(model);
-        table.setRowHeight(25);
+        table.setRowHeight(30);
         table.getTableHeader().setBackground(COLOR_PRIMARY_DARK);
         table.getTableHeader().setForeground(Color.WHITE);
+
+        // Use custom renderer/editor for "Editar" button
+        table.getColumn("Ação").setCellRenderer(new ButtonRenderer("Editar"));
+        table.getColumn("Ação").setCellEditor(new UserEditButtonEditor(new JCheckBox(), model, this::showDashboard)); // Refresh
+                                                                                                                      // on
+                                                                                                                      // success
 
         try {
             UsuarioDao dao = new UsuarioDao();
@@ -247,7 +264,8 @@ public class MainMenu extends BaseScreen {
                         u.getLogin(),
                         u.getPerfil().getNome(),
                         u.getFuncionario().getNome(),
-                        u.getStatus()
+                        u.getStatus(),
+                        "Editar"
                 });
             }
         } catch (SQLException e) {
@@ -265,16 +283,26 @@ public class MainMenu extends BaseScreen {
         lbl.setForeground(COLOR_TEXT);
         panel.add(lbl, BorderLayout.NORTH);
 
-        DefaultTableModel model = new DefaultTableModel(new Object[] { "Data/Hora", "Paciente", "Status", "Motivo" },
-                0);
+        // Add "Ação" column for the button
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[] { "ID", "Data/Hora", "Paciente", "Status", "Motivo", "Ação" }, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 5; // Only the button column is editable
+            }
+        };
+
         JTable table = new JTable(model);
-        table.setRowHeight(25);
-        table.getTableHeader().setBackground(COLOR_PRIMARY_DARK); // Dark Blue Header
+        table.setRowHeight(35); // Taller rows for buttons
+        table.getTableHeader().setBackground(COLOR_PRIMARY_DARK);
         table.getTableHeader().setForeground(Color.WHITE);
+
+        // Button Renderer and Editor
+        table.getColumn("Ação").setCellRenderer(new ButtonRenderer("Atender"));
+        table.getColumn("Ação").setCellEditor(new DoctorButtonEditor(new JCheckBox()));
 
         try {
             MedicoDao medicoDao = new MedicoDao();
-            // Fetch Medico entity linked to the logged-in user's Person ID
             Medico medico = medicoDao.buscarPorIdPessoa(usuarioLogado.getFuncionario().getId());
 
             if (medico != null) {
@@ -283,19 +311,19 @@ public class MainMenu extends BaseScreen {
                 DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
                 for (Consulta c : consultas) {
-                    // Only show future or today's appointments?
-                    // The prompt says "próximas consultas".
-                    // Let's filter out past ones if needed, or just show all active.
-                    // For now, showing all active (not cancelled) as returned by DAO.
                     model.addRow(new Object[] {
+                            c.getId(),
                             c.getDataHora().format(fmt),
                             c.getPaciente().getNome(),
                             c.getStatus(),
-                            c.getMotivo()
+                            c.getMotivo(),
+                            "Atender" // Button text
                     });
                 }
             } else {
-                panel.add(new JLabel("Erro: Perfil de médico não encontrado para este usuário."), BorderLayout.SOUTH);
+                panel.add(new JLabel(
+                        "Aviso: Seu usuário não está vinculado a um perfil de Médico completo. Contate o Gerente."),
+                        BorderLayout.SOUTH);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -349,5 +377,165 @@ public class MainMenu extends BaseScreen {
         card.add(lblValue, BorderLayout.CENTER);
 
         return card;
+    }
+
+    private String normalizeString(String str) {
+        if (str == null)
+            return "";
+        String nfdNormalizedString = Normalizer.normalize(str, Normalizer.Form.NFD);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(nfdNormalizedString).replaceAll("").toUpperCase();
+    }
+
+    // --- Button Renderer/Editor Inner Classes ---
+
+    class ButtonRenderer extends JButton implements TableCellRenderer {
+        private String label;
+
+        public ButtonRenderer(String label) {
+            this.label = label;
+            setOpaque(true);
+            setBackground(COLOR_PRIMARY);
+            setForeground(Color.WHITE);
+        }
+
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? label : value.toString());
+            return this;
+        }
+    }
+
+    // Editor for Doctor Actions
+    class DoctorButtonEditor extends DefaultCellEditor {
+        protected JButton button;
+        private String label;
+        private boolean isPushed;
+        private JTable table;
+
+        public DoctorButtonEditor(JCheckBox checkBox) {
+            super(checkBox);
+            button = new JButton();
+            button.setOpaque(true);
+            button.setBackground(COLOR_PRIMARY);
+            button.setForeground(Color.WHITE);
+            button.addActionListener(e -> fireEditingStopped());
+        }
+
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int row, int column) {
+            this.table = table;
+            label = (value == null) ? "Atender" : value.toString();
+            button.setText(label);
+            isPushed = true;
+            return button;
+        }
+
+        public Object getCellEditorValue() {
+            if (isPushed) {
+                int row = table.getSelectedRow();
+                Long idConsulta = (Long) table.getValueAt(row, 0);
+                String status = (String) table.getValueAt(row, 3);
+
+                if ("ATENDIDO".equals(status) || "CANCELADA".equals(status)) {
+                    JOptionPane.showMessageDialog(button, "Esta consulta já foi finalizada ou cancelada.");
+                } else {
+                    try {
+                        Consulta c = new Consulta();
+                        c.setId(idConsulta);
+
+                        ConsultaDao dao = new ConsultaDao();
+                        List<Consulta> all = dao.buscarTodas();
+                        for (Consulta con : all) {
+                            if (con.getId().equals(idConsulta)) {
+                                c = con;
+                                break;
+                            }
+                        }
+
+                        ProntuarioForm form = new ProntuarioForm(c);
+                        form.addWindowListener(new java.awt.event.WindowAdapter() {
+                            @Override
+                            public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                                showDashboard();
+                            }
+                        });
+                        form.setVisible(true);
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            isPushed = false;
+            return label;
+        }
+
+        public boolean stopCellEditing() {
+            isPushed = false;
+            return super.stopCellEditing();
+        }
+    }
+
+    // Editor for User Edit Actions
+    class UserEditButtonEditor extends DefaultCellEditor {
+        protected JButton button;
+        private String label;
+        private boolean isPushed;
+        private JTable table;
+        private Runnable refreshCallback;
+
+        public UserEditButtonEditor(JCheckBox checkBox, DefaultTableModel model, Runnable refreshCallback) {
+            super(checkBox);
+            this.refreshCallback = refreshCallback;
+            button = new JButton();
+            button.setOpaque(true);
+            button.setBackground(COLOR_ACCENT);
+            button.setForeground(Color.WHITE);
+            button.addActionListener(e -> fireEditingStopped());
+        }
+
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected, int row, int column) {
+            this.table = table;
+            label = (value == null) ? "Editar" : value.toString();
+            button.setText(label);
+            isPushed = true;
+            return button;
+        }
+
+        public Object getCellEditorValue() {
+            if (isPushed) {
+                int row = table.getSelectedRow();
+                Long idUsuario = (Long) table.getValueAt(row, 0);
+
+                try {
+                    // Fetch full user to edit
+                    UsuarioDao dao = new UsuarioDao();
+                    List<Usuario> all = dao.buscarTodos(); // Inefficient but safe
+                    Usuario target = null;
+                    for (Usuario u : all) {
+                        if (u.getId().equals(idUsuario)) {
+                            target = u;
+                            break;
+                        }
+                    }
+
+                    if (target != null) {
+                        new UsuarioUpdateForm(target, refreshCallback).setVisible(true);
+                    }
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            isPushed = false;
+            return label;
+        }
+
+        public boolean stopCellEditing() {
+            isPushed = false;
+            return super.stopCellEditing();
+        }
     }
 }

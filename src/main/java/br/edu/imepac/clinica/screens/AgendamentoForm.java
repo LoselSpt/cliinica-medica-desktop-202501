@@ -24,14 +24,27 @@ public class AgendamentoForm extends BaseScreen {
     private JCheckBox chkRetorno;
     private JTextField txtMotivo;
 
+    // Optional: Pre-fill data for Reconsulta
+    private Consulta consultaAnterior;
+
     public AgendamentoForm(Usuario usuario) {
+        this(usuario, null);
+    }
+
+    public AgendamentoForm(Usuario usuario, Consulta consultaAnterior) {
         super("Agendamento de Consulta");
+        this.consultaAnterior = consultaAnterior;
+
         setSize(500, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         initComponents();
         carregarCombos();
+
+        if (consultaAnterior != null) {
+            preencherDadosRetorno();
+        }
     }
 
     private void initComponents() {
@@ -138,7 +151,8 @@ public class AgendamentoForm extends BaseScreen {
                 comboMedico.addItem(m);
 
             PessoaDao pessoaDao = new PessoaDao();
-            List<Pessoa> pacientes = pessoaDao.buscarTodos();
+            List<Pessoa> pacientes = pessoaDao.buscarTodos(); // Should we use buscarPacientes here too? Maybe, but
+                                                              // let's keep all for flexibility
             for (Pessoa p : pacientes)
                 comboPaciente.addItem(p);
 
@@ -150,6 +164,33 @@ public class AgendamentoForm extends BaseScreen {
         } catch (SQLException e) {
             showError("Erro ao carregar dados: " + e.getMessage());
         }
+    }
+
+    private void preencherDadosRetorno() {
+        if (consultaAnterior == null)
+            return;
+
+        // Select Medico
+        for (int i = 0; i < comboMedico.getItemCount(); i++) {
+            Medico m = comboMedico.getItemAt(i);
+            if (m.getId().equals(consultaAnterior.getMedico().getId())) {
+                comboMedico.setSelectedIndex(i);
+                break;
+            }
+        }
+
+        // Select Paciente
+        for (int i = 0; i < comboPaciente.getItemCount(); i++) {
+            Pessoa p = comboPaciente.getItemAt(i);
+            if (p.getId().equals(consultaAnterior.getPaciente().getId())) {
+                comboPaciente.setSelectedIndex(i);
+                break;
+            }
+        }
+
+        // Check Retorno
+        chkRetorno.setSelected(true);
+        txtMotivo.setText("Retorno - " + consultaAnterior.getMotivo());
     }
 
     private void agendar() {

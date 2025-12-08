@@ -40,14 +40,22 @@ public class PacienteListaForm extends BaseScreen {
         actions.setOpaque(false);
 
         JButton btnNovo = new JButton("Novo Paciente");
+        btnNovo.setBackground(COLOR_ACCENT);
+        btnNovo.setForeground(Color.WHITE);
         btnNovo.addActionListener(e -> new PacienteAddForm(this::carregarDados).setVisible(true));
 
-        JButton btnAtualizar = new JButton("Atualizar");
+        JButton btnAtualizar = new JButton("Atualizar Lista");
         btnAtualizar.setBackground(COLOR_SURFACE);
         btnAtualizar.setForeground(COLOR_TEXT);
         btnAtualizar.addActionListener(e -> carregarDados());
 
+        JButton btnExcluir = new JButton("Excluir Selecionado");
+        btnExcluir.setBackground(new Color(192, 57, 43)); // Red
+        btnExcluir.setForeground(Color.WHITE);
+        btnExcluir.addActionListener(e -> excluirSelecionado());
+
         actions.add(btnAtualizar);
+        actions.add(btnExcluir);
         actions.add(btnNovo);
         topPanel.add(actions, BorderLayout.EAST);
 
@@ -65,6 +73,8 @@ public class PacienteListaForm extends BaseScreen {
         table.setRowHeight(30);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
+        table.getTableHeader().setBackground(COLOR_PRIMARY_DARK);
+        table.getTableHeader().setForeground(Color.WHITE);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -76,12 +86,40 @@ public class PacienteListaForm extends BaseScreen {
     private void carregarDados() {
         try {
             tableModel.setRowCount(0);
-            List<Pessoa> pessoas = dao.buscarTodos();
+            // Use buscarPacientes to filter out doctors and users
+            List<Pessoa> pessoas = dao.buscarPacientes();
             for (Pessoa p : pessoas) {
                 tableModel.addRow(new Object[] { p.getId(), p.getNome(), p.getTelefone(), p.getEmail() });
             }
         } catch (SQLException e) {
             showError("Erro ao carregar dados: " + e.getMessage());
+        }
+    }
+
+    private void excluirSelecionado() {
+        int row = table.getSelectedRow();
+        if (row == -1) {
+            showWarning("Selecione um paciente para excluir.");
+            return;
+        }
+
+        Long id = (Long) table.getValueAt(row, 0);
+        String nome = (String) table.getValueAt(row, 1);
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Tem certeza que deseja excluir o paciente '" + nome + "'?",
+                "Confirmar Exclusão",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                dao.excluir(id);
+                showSuccess("Paciente excluído com sucesso!");
+                carregarDados();
+            } catch (SQLException e) {
+                showError("Erro ao excluir: " + e.getMessage()
+                        + "\nVerifique se o paciente possui consultas ou registros vinculados.");
+            }
         }
     }
 }

@@ -72,7 +72,7 @@ public class ConsultaListaForm extends BaseScreen {
         // Status Filter
         JLabel lblStatus = new JLabel("Status:");
         lblStatus.setForeground(Color.LIGHT_GRAY);
-        comboStatus = new JComboBox<>(new String[] { "Todos", "AGENDADA", "REALIZADA", "CANCELADA" });
+        comboStatus = new JComboBox<>(new String[] { "Todos", "AGENDADA", "REALIZADA", "CANCELADA", "ATENDIDO" });
 
         JButton btnFiltrar = new JButton("Filtrar");
         btnFiltrar.addActionListener(e -> aplicarFiltros());
@@ -95,9 +95,17 @@ public class ConsultaListaForm extends BaseScreen {
         btnAtualizar.addActionListener(e -> carregarConsultas());
         actionPanel.add(btnAtualizar);
 
+        // Reagendar / Retorno Button
+        JButton btnReagendar = new JButton("Reagendar / Retorno");
+        btnReagendar.setBackground(COLOR_ACCENT);
+        btnReagendar.setForeground(Color.WHITE);
+        btnReagendar.addActionListener(e -> reagendarConsulta());
+        actionPanel.add(btnReagendar);
+
         if (usuarioLogado.getPerfil().getFuncionalidades().contains(EnumFuncionalidades.DELETAR_CONSULTA)) {
             JButton btnCancelar = new JButton("Cancelar Selecionada");
             btnCancelar.setBackground(new Color(192, 57, 43));
+            btnCancelar.setForeground(Color.WHITE);
             btnCancelar.addActionListener(e -> cancelarConsulta());
             actionPanel.add(btnCancelar);
         }
@@ -208,6 +216,26 @@ public class ConsultaListaForm extends BaseScreen {
             }
         } else {
             showWarning("Selecione uma consulta na tabela.");
+        }
+    }
+
+    private void reagendarConsulta() {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow >= 0) {
+            Long id = (Long) table.getValueAt(selectedRow, 0);
+
+            // Find the full Consulta object
+            Consulta selectedConsulta = allConsultas.stream()
+                    .filter(c -> c.getId().equals(id))
+                    .findFirst()
+                    .orElse(null);
+
+            if (selectedConsulta != null) {
+                // Open AgendamentoForm with pre-filled data
+                new AgendamentoForm(usuarioLogado, selectedConsulta).setVisible(true);
+            }
+        } else {
+            showWarning("Selecione uma consulta para reagendar ou marcar retorno.");
         }
     }
 }

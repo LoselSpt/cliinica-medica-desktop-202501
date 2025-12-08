@@ -126,10 +126,15 @@ public class ConsultaDao extends BaseDao {
     }
 
     public void cancelar(Long id) throws SQLException {
-        String sql = "UPDATE consultas SET status = 'CANCELADA' WHERE id = ?";
+        atualizarStatus(id, "CANCELADA");
+    }
+
+    public void atualizarStatus(Long id, String status) throws SQLException {
+        String sql = "UPDATE consultas SET status = ? WHERE id = ?";
         try (Connection conn = getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, id);
+            stmt.setString(1, status);
+            stmt.setLong(2, id);
             stmt.executeUpdate();
         }
     }
