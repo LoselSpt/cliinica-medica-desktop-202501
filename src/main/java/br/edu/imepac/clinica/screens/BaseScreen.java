@@ -22,7 +22,7 @@ import javax.swing.plaf.FontUIResource;
  */
 public class BaseScreen extends JFrame {
 
-    // Theme Constants - Professional Dark Palette
+    // Constantes de Tema - Paleta Escura Profissional
     public static final Color COLOR_BACKGROUND = Color.decode("#121212"); // Almost Black
     public static final Color COLOR_SURFACE = Color.decode("#1E1E1E"); // Dark Gray
     public static final Color COLOR_PRIMARY = Color.decode("#001f3f"); // Navy Blue
@@ -131,8 +131,8 @@ public class BaseScreen extends JFrame {
                 javax.swing.JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // Deprecated but kept for compatibility if needed, though setupGlobalUI handles
-    // most
+    // Obsoleto, mas mantido para compatibilidade se necessário, embora
+    // setupGlobalUI cuide da maioria
     protected void applyTheme() {
         // Re-apply if needed for specific components not covered by UIManager
         this.getContentPane().setBackground(COLOR_BACKGROUND);

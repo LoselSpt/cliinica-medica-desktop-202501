@@ -62,7 +62,7 @@ public class MedicoDao extends BaseDao {
             conn = getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Insert Pessoa
+            // 1. Inserir Pessoa
             String sqlPessoa = "INSERT INTO pessoas (nome, telefone, email) VALUES (?, ?, ?)";
             stmtPessoa = conn.prepareStatement(sqlPessoa, PreparedStatement.RETURN_GENERATED_KEYS);
             stmtPessoa.setString(1, medico.getNome());
@@ -77,11 +77,11 @@ public class MedicoDao extends BaseDao {
                 throw new SQLException("Falha ao criar Pessoa, nenhum ID obtido.");
             }
 
-            // 2. Insert Medico
+            // 2. Inserir Medico
             String sqlMedico = "INSERT INTO medico (crm, id_pessoa, id_especialidade) VALUES (?, ?, ?)";
             stmtMedico = conn.prepareStatement(sqlMedico);
             stmtMedico.setString(1, medico.getCrm());
-            stmtMedico.setLong(2, medico.getId()); // Use Pessoa ID
+            stmtMedico.setLong(2, medico.getId()); // Usar ID de Pessoa
 
             if (medico.getEspecialidade() != null) {
                 stmtMedico.setLong(3, medico.getEspecialidade().getId());
@@ -120,7 +120,7 @@ public class MedicoDao extends BaseDao {
         try (Connection conn = getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, medico.getCrm());
-            stmt.setLong(2, medico.getId()); // ID inherited from Pessoa
+            stmt.setLong(2, medico.getId()); // ID herdado de Pessoa
 
             if (medico.getEspecialidade() != null) {
                 stmt.setLong(3, medico.getEspecialidade().getId());
@@ -133,7 +133,7 @@ public class MedicoDao extends BaseDao {
     }
 
     public void atualizar(Medico medico) throws SQLException {
-        // Not implemented
+        // Não implementado
     }
 
     public Medico buscarPorIdPessoa(Long idPessoa) throws SQLException {
@@ -141,7 +141,7 @@ public class MedicoDao extends BaseDao {
                 "e.id as id_especialidade, e.nome as nome_especialidade, e.descricao " +
                 "FROM medico m " +
                 "JOIN pessoas p ON m.id_pessoa = p.id " +
-                "LEFT JOIN especialidade e ON m.id_especialidade = e.id " + // Changed to LEFT JOIN in case null
+                "LEFT JOIN especialidade e ON m.id_especialidade = e.id " + // Alterado para LEFT JOIN caso seja nulo
                 "WHERE m.id_pessoa = ?";
 
         Connection conn = null;

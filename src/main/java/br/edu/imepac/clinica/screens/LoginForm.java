@@ -14,76 +14,79 @@ public class LoginForm extends BaseScreen {
 
     public LoginForm() {
         super("Login - Clínica Médica");
-        setSize(400, 500); // Slightly larger for better spacing
+        setSize(400, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
         setLayout(new GridBagLayout()); // Center everything
 
         initComponents();
 
-        // Center on screen AFTER setting size and components
+        // Ensure centering after components are added
         setLocationRelativeTo(null);
     }
 
     private void initComponents() {
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setLayout(new GridBagLayout()); // Use GridBag for internal layout too
         mainPanel.setBackground(COLOR_SURFACE);
         mainPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(COLOR_BORDER, 1),
                 BorderFactory.createEmptyBorder(40, 40, 40, 40)));
 
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+
         // Title
-        JLabel lblTitle = new JLabel("Bem-vindo");
+        JLabel lblTitle = new JLabel("Bem-vindo", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         lblTitle.setForeground(COLOR_TEXT);
-        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        mainPanel.add(lblTitle);
+        mainPanel.add(lblTitle, gbc);
 
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-
-        JLabel lblSubtitle = new JLabel("Acesse sua conta");
+        gbc.gridy++;
+        JLabel lblSubtitle = new JLabel("Acesse sua conta", SwingConstants.CENTER);
         lblSubtitle.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         lblSubtitle.setForeground(COLOR_TEXT_SECONDARY);
-        lblSubtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        mainPanel.add(lblSubtitle);
+        mainPanel.add(lblSubtitle, gbc);
 
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        gbc.gridy++;
+        gbc.insets = new Insets(30, 5, 5, 5); // Spacer
 
         // Login Field
         JLabel lblLogin = new JLabel("Usuário");
-        lblLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
-        mainPanel.add(lblLogin);
+        mainPanel.add(lblLogin, gbc);
 
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        gbc.gridy++;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        txtLogin = new JTextField(20);
+        txtLogin.setPreferredSize(new Dimension(250, 40));
+        mainPanel.add(txtLogin, gbc);
 
-        txtLogin = new JTextField();
-        txtLogin.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        txtLogin.setAlignmentX(Component.LEFT_ALIGNMENT);
-        mainPanel.add(txtLogin);
-
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        gbc.gridy++;
+        gbc.insets = new Insets(15, 5, 5, 5); // Spacer
 
         // Password Field
         JLabel lblSenha = new JLabel("Senha");
-        lblSenha.setAlignmentX(Component.LEFT_ALIGNMENT);
-        mainPanel.add(lblSenha);
+        mainPanel.add(lblSenha, gbc);
 
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        gbc.gridy++;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        txtSenha = new JPasswordField(20);
+        txtSenha.setPreferredSize(new Dimension(250, 40));
+        mainPanel.add(txtSenha, gbc);
 
-        txtSenha = new JPasswordField();
-        txtSenha.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        txtSenha.setAlignmentX(Component.LEFT_ALIGNMENT);
-        mainPanel.add(txtSenha);
-
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        gbc.gridy++;
+        gbc.insets = new Insets(30, 5, 5, 5); // Spacer
 
         // Login Button
         btnEntrar = new JButton("ENTRAR");
-        btnEntrar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
-        btnEntrar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnEntrar.setPreferredSize(new Dimension(250, 45));
         btnEntrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnEntrar.addActionListener(this::autenticar);
-        mainPanel.add(btnEntrar);
+        mainPanel.add(btnEntrar, gbc);
 
         // Add main panel to frame
         add(mainPanel);

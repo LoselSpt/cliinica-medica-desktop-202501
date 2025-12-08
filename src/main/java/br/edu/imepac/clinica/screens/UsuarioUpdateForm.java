@@ -1,9 +1,11 @@
 package br.edu.imepac.clinica.screens;
 
+import br.edu.imepac.clinica.daos.EspecialidadeDao;
 import br.edu.imepac.clinica.daos.MedicoDao;
 import br.edu.imepac.clinica.daos.PessoaDao;
 import br.edu.imepac.clinica.daos.UsuarioDao;
 import br.edu.imepac.clinica.entidades.EnumStatusUsuario;
+import br.edu.imepac.clinica.entidades.Especialidade;
 import br.edu.imepac.clinica.entidades.Medico;
 import br.edu.imepac.clinica.entidades.Pessoa;
 import br.edu.imepac.clinica.entidades.Usuario;
@@ -13,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.SQLException;
 import java.text.Normalizer;
+import java.util.List;
 
 public class UsuarioUpdateForm extends BaseScreen {
 
@@ -91,11 +94,32 @@ public class UsuarioUpdateForm extends BaseScreen {
 
     private void vincularMedico(ActionEvent e) {
         try {
+            EspecialidadeDao espDao = new EspecialidadeDao();
+            List<Especialidade> especialidades = espDao.listarTodos();
+
+            if (especialidades.isEmpty()) {
+                showWarning("Nenhuma especialidade cadastrada! Cadastre uma especialidade primeiro.");
+                return;
+            }
+
+            Especialidade selectedEsp = (Especialidade) JOptionPane.showInputDialog(
+                    this,
+                    "Selecione a Especialidade do Médico:",
+                    "Vincular Médico",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    especialidades.toArray(),
+                    especialidades.get(0));
+
+            if (selectedEsp == null) {
+                return; // User cancelled
+            }
+
             MedicoDao dao = new MedicoDao();
             Medico m = new Medico();
             m.setId(usuario.getFuncionario().getId());
             m.setCrm("Pendente"); // Placeholder
-            m.setEspecialidade(null);
+            m.setEspecialidade(selectedEsp);
 
             dao.salvarParaPessoaExistente(m);
 
